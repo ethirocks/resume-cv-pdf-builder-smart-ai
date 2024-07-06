@@ -1,122 +1,92 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-
-interface Education {
-  institution: string;
-  degree: string;
-  startDate: Date;
-  endDate: Date | null;
-  currently: boolean;
-  description: string;
-}
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { Education, FormData } from '../types';
 
 interface EducationSectionProps {
-  formData: { education: Education[] };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 const EducationSection: React.FC<EducationSectionProps> = ({ formData, setFormData }) => {
-  const [showStartDatePicker, setShowStartDatePicker] = useState<{ [key: number]: boolean }>({});
-  const [showEndDatePicker, setShowEndDatePicker] = useState<{ [key: number]: boolean }>({});
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [currentField, setCurrentField] = useState<keyof Education | null>(null);
 
-  const handleInputChange = (index: number, field: keyof Education, value: any) => {
-    const updatedEducation = formData.education.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
-    setFormData((prev: any) => ({ ...prev, education: updatedEducation }));
+  const handleChange = (index: number, field: keyof Education, value: string | boolean | Date) => {
+    const newEducation = [...formData.education];
+    newEducation[index] = { ...newEducation[index], [field]: value };
+    setFormData({ ...formData, education: newEducation });
   };
 
-  const addEducation = () => {
-    setFormData((prev: any) => ({
-      ...prev,
-      education: [
-        ...prev.education,
-        { institution: '', degree: '', startDate: new Date(), endDate: null, currently: false, description: '' },
-      ],
-    }));
-  };
-
-  const handleDateChange = (index: number, field: keyof Education, event: any, selectedDate: Date | undefined) => {
-    setShowStartDatePicker((prev) => ({ ...prev, [index]: false }));
-    setShowEndDatePicker((prev) => ({ ...prev, [index]: false }));
-    handleInputChange(index, field, selectedDate || new Date());
+  const handleDateConfirm = (date: Date) => {
+    if (currentIndex !== null && currentField) {
+      handleChange(currentIndex, currentField, date);
+      setCurrentIndex(null);
+      setCurrentField(null);
+      setShowDatePicker(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Education</Text>
+      <Text style={styles.header}>Education</Text>
       {formData.education.map((edu, index) => (
-        <View key={index} style={styles.sectionContainer}>
+        <View key={index} style={styles.section}>
+          <Text>Institution:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Institution"
             value={edu.institution}
-            onChangeText={(text) => handleInputChange(index, 'institution', text)}
+            onChangeText={(text) => handleChange(index, 'institution', text)}
+            placeholder="Institution"
           />
+          <Text>Degree:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Degree"
             value={edu.degree}
-            onChangeText={(text) => handleInputChange(index, 'degree', text)}
+            onChangeText={(text) => handleChange(index, 'degree', text)}
+            placeholder="Degree"
           />
-          <View style={styles.dateRow}>
-            <Text>Start Date:</Text>
-            <TouchableOpacity
-              onPress={() => setShowStartDatePicker((prev) => ({ ...prev, [index]: true }))}
-              style={styles.dateButton}
-            >
-              <Text style={styles.dateText}>{edu.startDate.toDateString()}</Text>
-            </TouchableOpacity>
-            {showStartDatePicker[index] && (
-              <DateTimePicker
-                value={edu.startDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => handleDateChange(index, 'startDate', event, selectedDate!)}
-              />
-            )}
-          </View>
-          <View style={styles.dateRow}>
-            <Text>End Date:</Text>
-            {edu.currently ? (
-              <Text>Present</Text>
-            ) : (
-              <TouchableOpacity
-                onPress={() => setShowEndDatePicker((prev) => ({ ...prev, [index]: true }))}
-                style={styles.dateButton}
-              >
-                <Text style={styles.dateText}>{(edu.endDate || new Date()).toDateString()}</Text>
-              </TouchableOpacity>
-            )}
-            {showEndDatePicker[index] && (
-              <DateTimePicker
-                value={edu.endDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => handleDateChange(index, 'endDate', event, selectedDate!)}
-              />
-            )}
-            <View style={styles.switchContainer}>
-              <Text>Currently</Text>
-              <Switch
-                value={edu.currently}
-                onValueChange={(value) => handleInputChange(index, 'currently', value)}
-              />
-            </View>
-          </View>
+          <Text>Description:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Description"
             value={edu.description}
-            onChangeText={(text) => handleInputChange(index, 'description', text)}
+            onChangeText={(text) => handleChange(index, 'description', text)}
+            placeholder="Description"
             multiline
           />
+          <TouchableOpacity style={styles.dateButton} onPress={() => { setCurrentIndex(index); setCurrentField('startDate'); setShowDatePicker(true); }}>
+            <Text style={styles.dateButtonText}>Pick Start Date</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateText}>Start Date: {edu.startDate.toDateString()}</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => { setCurrentIndex(index); setCurrentField('endDate'); setShowDatePicker(true); }}>
+            <Text style={styles.dateButtonText}>Pick End Date</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateText}>End Date: {edu.currently ? 'Present' : edu.endDate.toDateString()}</Text>
+          <View style={styles.switchContainer}>
+            <Text>Currently Studying Here</Text>
+            <Switch
+              value={edu.currently}
+              onValueChange={(value) => handleChange(index, 'currently', value)}
+            />
+          </View>
         </View>
       ))}
-      <TouchableOpacity style={styles.addButton} onPress={addEducation}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setFormData({
+          ...formData,
+          education: [...formData.education, { institution: '', degree: '', startDate: new Date(), endDate: new Date(), currently: false, description: '' }],
+        })}
+      >
         <Text style={styles.addButtonText}>Add Education</Text>
       </TouchableOpacity>
+      <DateTimePickerModal
+        isVisible={showDatePicker}
+        mode="date"
+        onConfirm={handleDateConfirm}
+        onCancel={() => setShowDatePicker(false)}
+      />
     </View>
   );
 };
@@ -124,52 +94,55 @@ const EducationSection: React.FC<EducationSectionProps> = ({ formData, setFormDa
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
     marginBottom: 20,
   },
-  sectionTitle: {
+  header: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 10,
-    alignSelf: 'flex-start',
   },
-  sectionContainer: {
-    width: '100%',
-    marginBottom: 20,
+  section: {
+    marginBottom: 15,
   },
   input: {
-    width: '100%',
-    padding: 15,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 5,
     marginBottom: 10,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
   },
   dateButton: {
     backgroundColor: '#007bff',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
   },
   dateText: {
-    color: '#fff',
+    fontSize: 16,
+    marginBottom: 10,
   },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   addButton: {
     backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
     borderRadius: 10,
-    marginTop: 10,
+    alignItems: 'center',
   },
   addButtonText: {
     color: '#fff',

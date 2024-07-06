@@ -1,122 +1,92 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Switch } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-
-interface Experience {
-  company: string;
-  role: string;
-  startDate: Date;
-  endDate: Date | null;
-  currently: boolean;
-  description: string;
-}
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { Experience, FormData } from '../types';
 
 interface ExperienceSectionProps {
-  formData: { experience: Experience[] };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ formData, setFormData }) => {
-  const [showStartDatePicker, setShowStartDatePicker] = useState<{ [key: number]: boolean }>({});
-  const [showEndDatePicker, setShowEndDatePicker] = useState<{ [key: number]: boolean }>({});
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [currentField, setCurrentField] = useState<keyof Experience | null>(null);
 
-  const handleInputChange = (index: number, field: keyof Experience, value: any) => {
-    const updatedExperience = formData.experience.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-    );
-    setFormData((prev: any) => ({ ...prev, experience: updatedExperience }));
+  const handleChange = (index: number, field: keyof Experience, value: string | boolean | Date) => {
+    const newExperience = [...formData.experience];
+    newExperience[index] = { ...newExperience[index], [field]: value };
+    setFormData({ ...formData, experience: newExperience });
   };
 
-  const addExperience = () => {
-    setFormData((prev: any) => ({
-      ...prev,
-      experience: [
-        ...prev.experience,
-        { company: '', role: '', startDate: new Date(), endDate: null, currently: false, description: '' },
-      ],
-    }));
-  };
-
-  const handleDateChange = (index: number, field: keyof Experience, event: any, selectedDate: Date) => {
-    setShowStartDatePicker((prev) => ({ ...prev, [index]: false }));
-    setShowEndDatePicker((prev) => ({ ...prev, [index]: false }));
-    handleInputChange(index, field, selectedDate);
+  const handleDateConfirm = (date: Date) => {
+    if (currentIndex !== null && currentField) {
+      handleChange(currentIndex, currentField, date);
+      setCurrentIndex(null);
+      setCurrentField(null);
+      setShowDatePicker(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Experience</Text>
+      <Text style={styles.header}>Experience</Text>
       {formData.experience.map((exp, index) => (
-        <View key={index} style={styles.sectionContainer}>
+        <View key={index} style={styles.section}>
+          <Text>Company:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Company"
             value={exp.company}
-            onChangeText={(text) => handleInputChange(index, 'company', text)}
+            onChangeText={(text) => handleChange(index, 'company', text)}
+            placeholder="Company"
           />
+          <Text>Role:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Role"
             value={exp.role}
-            onChangeText={(text) => handleInputChange(index, 'role', text)}
+            onChangeText={(text) => handleChange(index, 'role', text)}
+            placeholder="Role"
           />
-          <View style={styles.dateRow}>
-            <Text>Start Date:</Text>
-            <TouchableOpacity
-              onPress={() => setShowStartDatePicker((prev) => ({ ...prev, [index]: true }))}
-              style={styles.dateButton}
-            >
-              <Text style={styles.dateText}>{exp.startDate.toDateString()}</Text>
-            </TouchableOpacity>
-            {showStartDatePicker[index] && (
-              <DateTimePicker
-                value={exp.startDate}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => handleDateChange(index, 'startDate', event, selectedDate!)}
-              />
-            )}
-          </View>
-          <View style={styles.dateRow}>
-            <Text>End Date:</Text>
-            {exp.currently ? (
-              <Text>Present</Text>
-            ) : (
-              <TouchableOpacity
-                onPress={() => setShowEndDatePicker((prev) => ({ ...prev, [index]: true }))}
-                style={styles.dateButton}
-              >
-                <Text style={styles.dateText}>{(exp.endDate || new Date()).toDateString()}</Text>
-              </TouchableOpacity>
-            )}
-            {showEndDatePicker[index] && (
-              <DateTimePicker
-                value={exp.endDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => handleDateChange(index, 'endDate', event, selectedDate!)}
-              />
-            )}
-            <View style={styles.switchContainer}>
-              <Text>Currently</Text>
-              <Switch
-                value={exp.currently}
-                onValueChange={(value) => handleInputChange(index, 'currently', value)}
-              />
-            </View>
-          </View>
+          <Text>Description:</Text>
           <TextInput
             style={styles.input}
-            placeholder="Description"
             value={exp.description}
-            onChangeText={(text) => handleInputChange(index, 'description', text)}
+            onChangeText={(text) => handleChange(index, 'description', text)}
+            placeholder="Description"
             multiline
           />
+          <TouchableOpacity style={styles.dateButton} onPress={() => { setCurrentIndex(index); setCurrentField('startDate'); setShowDatePicker(true); }}>
+            <Text style={styles.dateButtonText}>Pick Start Date</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateText}>Start Date: {exp.startDate.toDateString()}</Text>
+          <TouchableOpacity style={styles.dateButton} onPress={() => { setCurrentIndex(index); setCurrentField('endDate'); setShowDatePicker(true); }}>
+            <Text style={styles.dateButtonText}>Pick End Date</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateText}>End Date: {exp.currently ? 'Present' : exp.endDate.toDateString()}</Text>
+          <View style={styles.switchContainer}>
+            <Text>Currently Working Here</Text>
+            <Switch
+              value={exp.currently}
+              onValueChange={(value) => handleChange(index, 'currently', value)}
+            />
+          </View>
         </View>
       ))}
-      <TouchableOpacity style={styles.addButton} onPress={addExperience}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setFormData({
+          ...formData,
+          experience: [...formData.experience, { company: '', role: '', startDate: new Date(), endDate: new Date(), currently: false, description: '' }],
+        })}
+      >
         <Text style={styles.addButtonText}>Add Experience</Text>
       </TouchableOpacity>
+      <DateTimePickerModal
+        isVisible={showDatePicker}
+        mode="date"
+        onConfirm={handleDateConfirm}
+        onCancel={() => setShowDatePicker(false)}
+      />
     </View>
   );
 };
@@ -124,52 +94,55 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ formData, setForm
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    padding: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 10,
     marginBottom: 20,
   },
-  sectionTitle: {
+  header: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 10,
-    alignSelf: 'flex-start',
   },
-  sectionContainer: {
-    width: '100%',
-    marginBottom: 20,
+  section: {
+    marginBottom: 15,
   },
   input: {
-    width: '100%',
-    padding: 15,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 5,
     marginBottom: 10,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
   },
   dateButton: {
     backgroundColor: '#007bff',
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
+    marginBottom: 5,
+    alignItems: 'center',
+  },
+  dateButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
   },
   dateText: {
-    color: '#fff',
+    fontSize: 16,
+    marginBottom: 10,
   },
   switchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   addButton: {
     backgroundColor: '#007bff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
     borderRadius: 10,
-    marginTop: 10,
+    alignItems: 'center',
   },
   addButtonText: {
     color: '#fff',
