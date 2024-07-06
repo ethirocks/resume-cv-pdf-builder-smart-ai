@@ -1,0 +1,67 @@
+# Dependencies
+/node_modules/
+/.expo/
+/web-build/
+
+# Expo
+.expo-shared/
+
+# Build directories
+dist/
+build/
+
+# macOS
+.DS_Store
+
+# npm debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+*.log
+
+# Android
+*.apk
+*.aab
+*.jks
+
+# iOS
+*.xcworkspace
+*.xcuserdata/
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/xcschemes/*.xcscheme
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/bin
+
+# Gradle files
+.gradle/
+build/
+
+# Miscellaneous
+*.swp
+*.swo
+*~
+.project
+.idea/
+.cxx/
+*.iml
+*.hprof
+*.lock
