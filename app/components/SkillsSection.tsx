@@ -1,21 +1,25 @@
-// components/SkillsSection.tsx
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Text } from 'react-native';
+import { FormData } from '../types';
 
 interface SkillsSectionProps {
-  formData: { skills: string };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 const SkillsSection: React.FC<SkillsSectionProps> = ({ formData, setFormData }) => {
+  const handleSkillsChange = (value: string) => {
+    setFormData({ ...formData, skills: value });
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={styles.section}>
       <Text style={styles.sectionTitle}>Skills</Text>
       <TextInput
-        style={styles.input}
-        placeholder="Skills"
+        placeholder="Enter your skills separated by commas"
         value={formData.skills}
-        onChangeText={(text) => setFormData((prev: any) => ({ ...prev, skills: text }))}
+        onChangeText={handleSkillsChange}
+        style={styles.input}
         multiline
       />
     </View>
@@ -23,24 +27,21 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ formData, setFormData }) 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
+  section: {
     marginBottom: 20,
+    width: '100%',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 20,
     marginBottom: 10,
-    alignSelf: 'flex-start',
   },
   input: {
-    width: '100%',
-    padding: 15,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 10,
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
   },
 });
 

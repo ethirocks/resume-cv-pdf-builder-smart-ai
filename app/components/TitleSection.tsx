@@ -1,66 +1,74 @@
-// components/TitleSection.tsx
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Text } from 'react-native';
+import { FormData } from '../types';
 
 interface TitleSectionProps {
-  formData: {
-    name: string;
-    email: string;
-    phone: string;
-    linkedin: string;
-  };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }
 
 const TitleSection: React.FC<TitleSectionProps> = ({ formData, setFormData }) => {
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Resume</Text>
+    <View style={styles.section}>
+      <Text style={styles.title}>Personal Information</Text>
+      <Text style={styles.label}>Name:</Text>
       <TextInput
-        style={styles.input}
         placeholder="Name"
         value={formData.name}
-        onChangeText={(text) => setFormData((prev: any) => ({ ...prev, name: text }))}
-      />
-      <TextInput
+        onChangeText={(value) => handleChange('name', value)}
         style={styles.input}
+      />
+      <Text style={styles.label}>Email:</Text>
+      <TextInput
         placeholder="Email"
         value={formData.email}
-        onChangeText={(text) => setFormData((prev: any) => ({ ...prev, email: text }))}
-      />
-      <TextInput
+        onChangeText={(value) => handleChange('email', value)}
         style={styles.input}
+      />
+      <Text style={styles.label}>Phone:</Text>
+      <TextInput
         placeholder="Phone"
         value={formData.phone}
-        onChangeText={(text) => setFormData((prev: any) => ({ ...prev, phone: text }))}
-      />
-      <TextInput
+        onChangeText={(value) => handleChange('phone', value)}
         style={styles.input}
+      />
+      <Text style={styles.label}>LinkedIn:</Text>
+      <TextInput
         placeholder="LinkedIn"
         value={formData.linkedin}
-        onChangeText={(text) => setFormData((prev: any) => ({ ...prev, linkedin: text }))}
+        onChangeText={(value) => handleChange('linkedin', value)}
+        style={styles.input}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
+  section: {
     marginBottom: 20,
+    width: '100%',
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
   },
   input: {
-    width: '100%',
-    padding: 15,
     borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 5,
     marginBottom: 10,
+    width: '100%',
   },
 });
 
